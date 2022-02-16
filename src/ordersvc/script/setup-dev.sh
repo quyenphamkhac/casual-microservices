@@ -1,0 +1,5 @@
+#!/usr/bin/env zsh
+export ORDERSVC_POSTGRESDB_ADDR=localhost:5433
+export ORDERSVC_POSTGRESDB_USER=postgres
+export ORDERSVC_POSTGRESDB_PASSWORD=postgres
+export ORDERSVC_POSTGRESDB_DATABASE=ordersvc
