@@ -8,11 +8,11 @@ protos:
 
 # ==============================================================================
 # Docker compose environment
-docker_compose_up:
-	docker-compose -f docker-compose.local.yml up -d
+setup_dev_env:
+	docker-compose -f deploy/docker-compose/docker-compose.local.yml up -d
 
-docker_compose_down:
-	docker-compose -f docker-compose.local.yml down
+stop_dev_env:
+	docker-compose -f deploy/docker-compose/docker-compose.local.yml down
 
 # ==============================================================================
 # Product service cmd
