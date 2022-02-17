@@ -1,8 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class AppService {
-  getHello(): string {
-    return 'Hello World!';
+  constructor(@Inject('PRODUCT_SERVICE') private client: ClientProxy) {}
+
+  async publishEvent(pattern: any, data: any) {
+    this.client.emit(pattern, data);
   }
 }
