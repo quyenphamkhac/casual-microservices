@@ -2,24 +2,21 @@ package rabbitmq
 
 import (
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/config"
-	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/internal/logger"
 	"github.com/streadway/amqp"
 )
 
 type publisherImpl struct {
-	cfg    *config.Config
-	conn   *amqp.Connection
-	logger logger.Logger
+	cfg *config.Config
+	ch  *amqp.Channel
 }
 
 type PublisherOptions struct {
 }
 
-func NewPublisher(cfg *config.Config, conn *amqp.Connection, logger logger.Logger) *publisherImpl {
+func NewPublisher(cfg *config.Config, ch *amqp.Channel) *publisherImpl {
 	return &publisherImpl{
-		cfg:    cfg,
-		conn:   conn,
-		logger: logger,
+		cfg: cfg,
+		ch:  ch,
 	}
 }
 

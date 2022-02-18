@@ -6,11 +6,17 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/joho/godotenv"
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/config"
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/transport"
 )
 
 func main() {
+	err := godotenv.Load(".dev.env")
+	if err != nil {
+		log.Fatal("error loading env file")
+	}
+
 	cfg, err := config.NewServiceConfig()
 	if err != nil {
 		panic(err)

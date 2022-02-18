@@ -54,6 +54,12 @@ func parseConfig(v *viper.Viper) (*Config, error) {
 			Database: v.GetString("postgresdb_database"),
 			Password: v.GetString("postgresdb_password"),
 		},
+		RabbitMQ: RabbitMQ{
+			User:     v.GetString("rabbitmq_user"),
+			Password: v.GetString("rabbitmq_password"),
+			Host:     v.GetString("rabbitmq_host"),
+			Port:     v.GetString("rabbitmq_port"),
+		},
 	}
 	return c, nil
 }

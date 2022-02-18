@@ -5,7 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/adapter/datastore/postgres"
+	rmqimpl "github.com/quyenphamkhac/casual-microservices/src/ordersvc/adapter/mq/rabbitmq"
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/pkg/postgresql"
+	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/pkg/rabbitmq"
 
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/config"
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/domain/usecase"
@@ -31,10 +33,26 @@ func (s *httpServer) Run(addr string) {
 		panic(err)
 	}
 
+	rmq := rabbitmq.NewRabbitMQConn(&s.cfg.RabbitMQ)
+	err = rmq.Dial()
+	if err != nil {
+		panic(err)
+	}
+
+	rmqConn := rmq.Conn()
+	defer rmqConn.Close()
+
+	ch, err := rmqConn.Channel()
+	if err != nil {
+		panic(err)
+	}
+
+	publisher := rmqimpl.NewPublisher(s.cfg, ch)
+
 	r := gin.Default()
 	r.Use(httpmdw.ErrorsMiddleware(gin.ErrorTypeAny))
 	orderRepository := postgres.NewOrderRepoImpl(db)
-	orderUsecase := usecase.NewOrderUsecaseImpl(orderRepository)
+	orderUsecase := usecase.NewOrderUsecaseImpl(orderRepository, publisher)
 
 	healthCtrl := httpv1.NewHealthCtrl()
 	orderCtrl := httpv1.NewOrderCtrl(orderUsecase)
