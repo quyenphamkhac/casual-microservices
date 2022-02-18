@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/domain/dto"
+	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/domain/event"
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/domain/usecase"
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/pkg/httperrors"
 )
@@ -34,4 +35,15 @@ func (ctrl *orderCtrl) PlaceOrderEndpoint(c *gin.Context) {
 }
 
 func (ctrl *orderCtrl) CancelOrderEndpoint(c *gin.Context) {
+}
+
+func (ctrl *orderCtrl) GetOrders(c *gin.Context) {
+	err := ctrl.usecase.EmitProductsValidationEvent(&event.ProductsValidationEvent{
+		Message: "Hello from order svc",
+	})
+	if err != nil {
+		c.Error(httperrors.New(http.StatusInternalServerError, err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": "OK"})
 }

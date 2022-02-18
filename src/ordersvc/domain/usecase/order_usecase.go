@@ -41,5 +41,6 @@ func (u *orderUsecaseImpl) CancelOrder(data *dto.CancelOrderDto) (*model.Order, 
 }
 
 func (u *orderUsecaseImpl) EmitProductsValidationEvent(data *event.ProductsValidationEvent) error {
-	return nil
+	_, err := u.publisher.Publish(data)
+	return err
 }

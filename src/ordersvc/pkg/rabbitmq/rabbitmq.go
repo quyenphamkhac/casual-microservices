@@ -1,43 +1,32 @@
 package rabbitmq
 
 import (
-	"errors"
 	"fmt"
+	"log"
+	"sync"
 
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/config"
 	"github.com/streadway/amqp"
 )
 
-type rabbitMQ struct {
-	conn *amqp.Connection
-	cfg  *config.RabbitMQ
-}
+var initRMQConnOnce sync.Once
 
-func NewRabbitMQConn(cfg *config.RabbitMQ) *rabbitMQ {
-	return &rabbitMQ{
-		cfg: cfg,
-	}
-}
-
-func (r *rabbitMQ) Conn() *amqp.Connection {
-	return r.conn
-}
-
-func (r *rabbitMQ) Dial() error {
-	if r.cfg == nil {
-		return errors.New("rabbitmq config is nil")
-	}
-	connStr := fmt.Sprintf(
-		"amqp://%s:%s@%s:%s/",
-		r.cfg.User,
-		r.cfg.Password,
-		r.cfg.Host,
-		r.cfg.Port,
-	)
+func NewRabbitMQConn(cfg *config.RabbitMQ) (*amqp.Connection, error) {
+	var conn *amqp.Connection
 	var err error
-	r.conn, err = amqp.Dial(connStr)
+	initRMQConnOnce.Do(func() {
+		connStr := fmt.Sprintf(
+			"amqp://%s:%s@%s:%s/",
+			cfg.User,
+			cfg.Password,
+			cfg.Host,
+			cfg.Port,
+		)
+		conn, err = amqp.Dial(connStr)
+	})
 	if err != nil {
-		return err
+		log.Fatal("Failed to connect to RabbitMQ")
+		return nil, err
 	}
-	return nil
+	return conn, err
 }

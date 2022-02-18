@@ -7,7 +7,7 @@ import (
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/adapter/datastore/postgres"
 	rmqimpl "github.com/quyenphamkhac/casual-microservices/src/ordersvc/adapter/mq/rabbitmq"
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/pkg/postgresql"
-	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/pkg/rabbitmq"
+	"github.com/streadway/amqp"
 
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/config"
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/domain/usecase"
@@ -25,24 +25,10 @@ func NewHttpServer(cfg *config.Config) *httpServer {
 	}
 }
 
-func (s *httpServer) Run(addr string) {
+func (s *httpServer) Run(addr string, ch *amqp.Channel) {
 	db := postgresql.NewPostgresqlDBConn(s.cfg)
 	defer db.Close()
 	err := postgresql.CreatePostgresqlDBSchema(db)
-	if err != nil {
-		panic(err)
-	}
-
-	rmq := rabbitmq.NewRabbitMQConn(&s.cfg.RabbitMQ)
-	err = rmq.Dial()
-	if err != nil {
-		panic(err)
-	}
-
-	rmqConn := rmq.Conn()
-	defer rmqConn.Close()
-
-	ch, err := rmqConn.Channel()
 	if err != nil {
 		panic(err)
 	}
@@ -60,11 +46,15 @@ func (s *httpServer) Run(addr string) {
 	v1 := r.Group("/v1")
 	{
 		v1.GET("/health", healthCtrl.HealthEndpoint)
+		v1.GET("/orders", orderCtrl.GetOrders)
 		v1.POST("/orders", orderCtrl.PlaceOrderEndpoint)
 	}
+	forever := make(chan bool)
+
 	go func() {
 		if err := r.Run(addr); err != nil {
 			log.Println("run http server failed")
 		}
 	}()
+	<-forever
 }
