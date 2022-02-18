@@ -1,5 +1,7 @@
 package mq
 
 type Publisher interface {
-	Publish()
+	Connect() error
+	Close() error
+	Publish(data interface{}, options interface{}) (interface{}, error)
 }

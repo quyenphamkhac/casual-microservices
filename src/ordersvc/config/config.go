@@ -7,6 +7,7 @@ import (
 type Config struct {
 	PostgresDB
 	RabbitMQ
+	RMQPublisherConfig
 }
 
 type PostgresDB struct {
@@ -21,6 +22,9 @@ type RabbitMQ struct {
 	Password string `mapstructure:"ORDERSVC_RABBITMQ_PASSWORD"`
 	Host     string `mapstructure:"ORDERSVC_RABBITMQ_HOST"`
 	Port     string `mapstructure:"ORDERSVC_RABBITMQ_PORT"`
+}
+
+type RMQPublisherConfig struct {
 }
 
 func NewServiceConfig() (*Config, error) {
