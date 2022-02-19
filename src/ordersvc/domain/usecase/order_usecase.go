@@ -1,11 +1,14 @@
 package usecase
 
 import (
+	"encoding/json"
+
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/domain/dto"
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/domain/event"
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/domain/model"
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/domain/repository"
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/internal/mq"
+	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/pkg/rabbitmq"
 )
 
 type OrderUsecase interface {
@@ -41,6 +44,12 @@ func (u *orderUsecaseImpl) CancelOrder(data *dto.CancelOrderDto) (*model.Order, 
 }
 
 func (u *orderUsecaseImpl) EmitProductsValidationEvent(data *event.ProductsValidationEvent) error {
-	_, err := u.publisher.Publish(data)
+	dataBytes, _ := json.Marshal(data)
+	err := u.publisher.Publish(dataBytes, []string{"producs_queue1"}, rabbitmq.PublishingOptions{
+		Exchange:    "",
+		Mandatory:   false,
+		Immediate:   false,
+		ContentType: "application/json",
+	})
 	return err
 }

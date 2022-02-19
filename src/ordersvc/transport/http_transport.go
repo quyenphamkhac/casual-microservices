@@ -7,7 +7,6 @@ import (
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/adapter/datastore/postgres"
 	rmqimpl "github.com/quyenphamkhac/casual-microservices/src/ordersvc/adapter/mq/rabbitmq"
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/pkg/postgresql"
-	"github.com/streadway/amqp"
 
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/config"
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/domain/usecase"
@@ -25,15 +24,17 @@ func NewHttpServer(cfg *config.Config) *httpServer {
 	}
 }
 
-func (s *httpServer) Run(addr string, ch *amqp.Channel) {
+func (s *httpServer) Run(addr string) {
 	db := postgresql.NewPostgresqlDBConn(s.cfg)
-	defer db.Close()
 	err := postgresql.CreatePostgresqlDBSchema(db)
 	if err != nil {
 		panic(err)
 	}
 
-	publisher := rmqimpl.NewPublisher(s.cfg, ch)
+	publisher, err := rmqimpl.NewPublisher(&s.cfg.RabbitMQ)
+	if err != nil {
+		panic(err)
+	}
 
 	r := gin.Default()
 	r.Use(httpmdw.ErrorsMiddleware(gin.ErrorTypeAny))
@@ -49,12 +50,10 @@ func (s *httpServer) Run(addr string, ch *amqp.Channel) {
 		v1.GET("/orders", orderCtrl.GetOrders)
 		v1.POST("/orders", orderCtrl.PlaceOrderEndpoint)
 	}
-	forever := make(chan bool)
 
 	go func() {
 		if err := r.Run(addr); err != nil {
 			log.Println("run http server failed")
 		}
 	}()
-	<-forever
 }

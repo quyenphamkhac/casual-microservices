@@ -39,7 +39,7 @@ func (ctrl *orderCtrl) CancelOrderEndpoint(c *gin.Context) {
 
 func (ctrl *orderCtrl) GetOrders(c *gin.Context) {
 	err := ctrl.usecase.EmitProductsValidationEvent(&event.ProductsValidationEvent{
-		Message: "Hello from order svc",
+		Message: "Em la bup mang non",
 	})
 	if err != nil {
 		c.Error(httperrors.New(http.StatusInternalServerError, err.Error()))

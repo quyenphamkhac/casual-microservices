@@ -1,56 +1,67 @@
 package rabbitmq
 
 import (
-	"encoding/json"
-	"fmt"
+	"errors"
 	"log"
 
 	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/config"
+	"github.com/quyenphamkhac/casual-microservices/src/ordersvc/pkg/rabbitmq"
 	"github.com/streadway/amqp"
 )
 
 type publisherImpl struct {
-	cfg *config.Config
-	ch  *amqp.Channel
+	cfg  *config.RabbitMQ
+	ch   *amqp.Channel
+	conn *amqp.Connection
 }
 
-type PublisherOptions struct {
-}
-
-func NewPublisher(cfg *config.Config, ch *amqp.Channel) *publisherImpl {
+func NewPublisher(cfg *config.RabbitMQ) (*publisherImpl, error) {
+	conn, ch, err := rabbitmq.NewRabbitMQSession(cfg)
+	if err != nil {
+		log.Fatalf("Failed to create new publisher: %s", err)
+		return nil, err
+	}
 	return &publisherImpl{
-		cfg: cfg,
-		ch:  ch,
-	}
+		cfg:  cfg,
+		ch:   ch,
+		conn: conn,
+	}, nil
 }
 
-func (p *publisherImpl) Connect() error {
+func (p *publisherImpl) Publish(data interface{}, pattern interface{}, options interface{}) error {
+	body, ok := data.([]byte)
+	if !ok {
+		return errors.New("message data is wrong")
+	}
+	routingKeys, ok := pattern.([]string)
+	if !ok {
+		return errors.New("routing key must be an array")
+	}
+	opts, ok := options.(rabbitmq.PublishingOptions)
+	if !ok {
+		return errors.New("publishing options is wrong")
+	}
+	for _, routingKey := range routingKeys {
+		err := p.ch.Publish(opts.Exchange, routingKey, opts.Mandatory, opts.Immediate, amqp.Publishing{
+			ContentType:     opts.ContentType,
+			ContentEncoding: opts.ContentEncoding,
+			DeliveryMode:    opts.DeliveryMode,
+			Priority:        opts.Priority,
+			CorrelationId:   opts.CorrelationId,
+			ReplyTo:         opts.ReplyTo,
+			Expiration:      opts.Expiration,
+			MessageId:       opts.MessageId,
+			Timestamp:       opts.Timestamp,
+			Type:            opts.Type,
+			UserId:          opts.UserId,
+			AppId:           opts.AppId,
+			Body:            body,
+		})
+
+		if err != nil {
+			log.Fatalf("Failed to publish message: %s", err)
+			return err
+		}
+	}
 	return nil
-}
-
-func (p *publisherImpl) Close() error {
-	return nil
-}
-
-func (p *publisherImpl) Publish(data interface{}) (interface{}, error) {
-	fmt.Println("Hello")
-	eventDataBytes, _ := json.Marshal(data)
-
-	q, err := p.ch.QueueDeclare("producs_queue1", false, false, false, false, nil)
-	if err != nil {
-		log.Fatal(err)
-		return nil, err
-	}
-	fmt.Println(q.Name)
-	err = p.ch.Publish("", q.Name, false, true, amqp.Publishing{
-		ContentType: "application/json",
-		Body:        eventDataBytes,
-	})
-
-	if err != nil {
-		log.Fatal(err)
-		return nil, err
-	}
-
-	return data, nil
 }
