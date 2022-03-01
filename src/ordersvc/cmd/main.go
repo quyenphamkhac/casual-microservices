@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+	log.Println("[*] Starting service ...")
 	err := godotenv.Load(".dev.env")
 	if err != nil {
 		log.Fatal("error loading env file")
