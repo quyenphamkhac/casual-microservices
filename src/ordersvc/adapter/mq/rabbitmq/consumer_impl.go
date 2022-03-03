@@ -58,6 +58,7 @@ func NewConsumer(cfg *config.RabbitMQ) (*consumerImpl, error) {
 		cfg:  cfg,
 		ch:   ch,
 		conn: conn,
+		mu:   &sync.RWMutex{},
 	}, err
 }
 

@@ -36,6 +36,30 @@ func (s *httpServer) Run(addr string) {
 		panic(err)
 	}
 
+	consumer, err := rmqimpl.NewConsumer(&s.cfg.RabbitMQ)
+	if err != nil {
+		panic(err)
+	}
+
+	consumer.StartConsuming(func(d rmqimpl.Delivery) rmqimpl.Action {
+		log.Printf("consumed: %v", string(d.Body))
+		return 0
+	}, rmqimpl.ConsumerOptions{
+		QueueDeclare:    true,
+		QueueName:       "products_queue",
+		QueueDurable:    false,
+		QueueAutoDelete: true,
+		QueueExclusive:  false,
+		QueueNoWait:     false,
+		QueueArgs:       nil,
+		ConsumerName:    "test_comsumer",
+		AutoAck:         true,
+		Exclusive:       false,
+		NoWait:          false,
+		NoLocal:         false,
+		Args:            nil,
+	})
+
 	r := gin.Default()
 	r.Use(httpmdw.ErrorsMiddleware(gin.ErrorTypeAny))
 	orderRepository := postgres.NewOrderRepoImpl(db)

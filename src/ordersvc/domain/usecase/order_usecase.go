@@ -45,7 +45,7 @@ func (u *orderUsecaseImpl) CancelOrder(data *dto.CancelOrderDto) (*model.Order, 
 
 func (u *orderUsecaseImpl) EmitProductsValidationEvent(data *event.ProductsValidationEvent) error {
 	dataBytes, _ := json.Marshal(data)
-	err := u.publisher.Publish(dataBytes, []string{"producs_queue1"}, rabbitmq.PublishingOptions{
+	err := u.publisher.Publish(dataBytes, []string{"products_queue"}, rabbitmq.PublishingOptions{
 		Exchange:    "",
 		Mandatory:   false,
 		Immediate:   false,
